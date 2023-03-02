@@ -34,6 +34,11 @@ jobs:
         with:
           workspaces: "./src-tauri -> target"
 
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 7
+          run_install: false
+
       - name: Sync node version and setup cache
         uses: actions/setup-node@v3
         with:
@@ -41,8 +46,7 @@ jobs:
           cache: "pnpm" # Set this to npm, yarn or pnpm.
 
       - name: Install app dependencies and build web
-        # Remove `&& yarn build` if you build your frontend in `beforeBuildCommand`
-        run: pnpm && pnpm build # Change this to npm, yarn or pnpm.
+        run: pnpm i
 
       - name: Download sidecar
         run: npx tsx ./scripts/bin.ts
