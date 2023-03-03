@@ -17,7 +17,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           repository: alist-org/desktop
-          token:  ${{ secrets.MY_TOKEN }}
+          token: ${{ secrets.MY_TOKEN }}
 
       - name: Install dependencies (ubuntu only)
         if: matrix.platform == 'ubuntu-20.04'
@@ -48,17 +48,35 @@ jobs:
       - name: Install app dependencies and build web
         run: pnpm i
 
+      - name: Replace version
+        run: |
+          npx tsx ./scripts/version.ts
+          cat src-tauri/tauri.conf.json
+        env:
+          AD_VERSION: ${{ github.ref_name }}
+
+      - name: Build tauri-update.json
+        run: |
+          npx tsx ./scripts/updater.ts
+          cat tauri-update.json
+
       - name: Download sidecar
         run: npx tsx ./scripts/bin.ts
 
       - name: Build the app
         uses: tauri-apps/tauri-action@v0
-
         env:
           GITHUB_TOKEN: ${{ secrets.MY_TOKEN }}
+          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
         with:
           tagName: ${{ github.ref_name }} # This only works if your workflow triggers on new tags.
           releaseName: "AList-Desktop v__VERSION__" # tauri-action replaces \_\_VERSION\_\_ with the app version.
           releaseBody: "See the assets to download and install this version."
           releaseDraft: true
           prerelease: false
+
+      - name: Update tauri-update.json
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            tauri-update.json
