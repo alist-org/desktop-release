@@ -37,25 +37,24 @@ jobs:
         env:
           AD_VERSION: ${{ github.ref_name }}
 
-      - name: Build tauri-update.json
+      - name: Build alist-desktop.json
         run: |
           npx tsx ./scripts/updater.ts
-          cat tauri-update.json
+          cat alist-desktop.json
 
-      - name: Create release and Upload tauri-update.json
+      - name: Create release and Upload alist-desktop.json
         id: create_release
         uses: softprops/action-gh-release@v1
         with:
           draft: true
           fail_on_unmatched_files: true
           files: |
-            tauri-update.json
+            alist-desktop.json
       
-      - name: Build tauri-update.json with proxy
+      - name: Build alist-desktop.json with proxy
         run: |
           npx tsx ./scripts/updater.ts
-          cat tauri-update.json
-          mv tauri-update.json alist-desktop.json
+          cat alist-desktop.json
         env:
           BASE: https://ghproxy.com/https://github.com/alist-org/desktop-release
 
@@ -116,11 +115,6 @@ jobs:
           cat src-tauri/tauri.conf.json
         env:
           AD_VERSION: ${{ github.ref_name }}
-
-      - name: Build tauri-update.json
-        run: |
-          npx tsx ./scripts/updater.ts
-          cat tauri-update.json
 
       - name: Download sidecar
         run: npx tsx ./scripts/bin.ts
