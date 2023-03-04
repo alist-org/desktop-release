@@ -121,4 +121,5 @@ jobs:
         with:
           tagName: ${{ github.ref_name }} # This only works if your workflow triggers on new tags.
           releaseId: ${{ needs.create_release_tag.outputs.release_id }}
+          releaseName: "AList-Desktop v__VERSION__" # tauri-action replaces \_\_VERSION\_\_ with the app version.
           releaseDraft: true
