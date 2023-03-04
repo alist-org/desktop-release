@@ -28,7 +28,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: "lts/*"
-          cache: "pnpm" # Set this to npm, yarn or pnpm.
+          # cache: "pnpm" # Set this to npm, yarn or pnpm.
 
       - name: Replace version
         run: |
@@ -36,6 +36,14 @@ jobs:
           cat src-tauri/tauri.conf.json
         env:
           AD_VERSION: ${{ github.ref_name }}
+
+      - name: Build alist-desktop.json with proxy
+        run: |
+          npx tsx ./scripts/updater.ts
+          cat alist-desktop.json
+          mv alist-desktop.json alist-desktop-proxy.json
+        env:
+          BASE: https://ghproxy.com/https://github.com/alist-org/desktop-release
 
       - name: Build alist-desktop.json
         run: |
@@ -50,21 +58,7 @@ jobs:
           fail_on_unmatched_files: true
           files: |
             alist-desktop.json
-      
-      - name: Build alist-desktop.json with proxy
-        run: |
-          npx tsx ./scripts/updater.ts
-          cat alist-desktop.json
-        env:
-          BASE: https://ghproxy.com/https://github.com/alist-org/desktop-release
-
-      - name: Update gist
-        uses: exuanbo/actions-deploy-gist@v1
-        with:
-          token: ${{ secrets.MY_TOKEN }}
-          gist_id: 5fce911993a07c69cf475f7cbca5739f
-          file_path: alist-desktop.json
-          file_type: text
+            alist-desktop-proxy.json
 
   release:
     needs: create_release_tag
