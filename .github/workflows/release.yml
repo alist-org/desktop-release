@@ -50,6 +50,22 @@ jobs:
           fail_on_unmatched_files: true
           files: |
             tauri-update.json
+      
+      - name: Build tauri-update.json with proxy
+        run: |
+          npx tsx ./scripts/updater.ts
+          cat tauri-update.json
+          mv tauri-update.json alist-desktop.json
+        env:
+          BASE: https://ghproxy.com/https://github.com/alist-org/desktop-release
+
+      - name: Update gist
+        uses: exuanbo/actions-deploy-gist@v1
+        with:
+          token: ${{ secrets.MY_TOKEN }}
+          gist_id: 5fce911993a07c69cf475f7cbca5739f
+          file_path: alist-desktop.json
+          file_type: text
 
   release:
     needs: create_release_tag
