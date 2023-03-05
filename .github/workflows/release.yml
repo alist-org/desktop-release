@@ -118,6 +118,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.MY_TOKEN }}
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+          ALIST_DESKTOP_SECRET: ${{ secrets.ALIST_DESKTOP_SECRET }}
         with:
           tagName: ${{ github.ref_name }} # This only works if your workflow triggers on new tags.
           releaseId: ${{ needs.create_release_tag.outputs.release_id }}
