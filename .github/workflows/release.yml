@@ -54,7 +54,7 @@ jobs:
         id: create_release
         uses: softprops/action-gh-release@v1
         with:
-          draft: true
+          draft: false
           fail_on_unmatched_files: true
           files: |
             alist-desktop.json
@@ -124,4 +124,33 @@ jobs:
           tagName: ${{ github.ref_name }} # This only works if your workflow triggers on new tags.
           releaseId: ${{ needs.create_release_tag.outputs.release_id }}
           releaseName: "AList-Desktop v__VERSION__" # tauri-action replaces \_\_VERSION\_\_ with the app version.
-          releaseDraft: true
+          releaseDraft: false
+
+  replace_sign:
+    name: "Replace signature"
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Sync node version and setup cache
+        uses: actions/setup-node@v3
+        with:
+          node-version: "lts/*"
+          # cache: "pnpm" # Set this to npm, yarn or pnpm.
+
+      - name: Replace version
+        run: |
+          npx tsx ./sign.ts
+          cat alist-desktop.json
+          cat alist-desktop-proxy.json
+
+      - name: Update alist-desktop.json
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          fail_on_unmatched_files: true
+          files: |
+            alist-desktop.json
+            alist-desktop-proxy.json
