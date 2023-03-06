@@ -6,62 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  create_release_tag:
-    name: "Create release tag"
-    environment: ${{ github.event.inputs.environment || 'Beta' }}
-    runs-on: ubuntu-latest
-    outputs:
-      release_id: ${{ steps.create_release.outputs.id }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-        with:
-          repository: alist-org/desktop
-          token: ${{ secrets.MY_TOKEN }}
-
-      - uses: pnpm/action-setup@v2
-        with:
-          version: 7
-          run_install: false
-
-      - name: Sync node version and setup cache
-        uses: actions/setup-node@v3
-        with:
-          node-version: "lts/*"
-          # cache: "pnpm" # Set this to npm, yarn or pnpm.
-
-      - name: Replace version
-        run: |
-          npx tsx ./scripts/version.ts
-          cat src-tauri/tauri.conf.json
-        env:
-          AD_VERSION: ${{ github.ref_name }}
-
-      - name: Build alist-desktop.json with proxy
-        run: |
-          npx tsx ./scripts/updater.ts
-          cat alist-desktop.json
-          mv alist-desktop.json alist-desktop-proxy.json
-        env:
-          BASE: https://ghproxy.com/https://github.com/alist-org/desktop-release
-
-      - name: Build alist-desktop.json
-        run: |
-          npx tsx ./scripts/updater.ts
-          cat alist-desktop.json
-
-      - name: Create release and Upload alist-desktop.json
-        id: create_release
-        uses: softprops/action-gh-release@v1
-        with:
-          draft: false
-          fail_on_unmatched_files: true
-          files: |
-            alist-desktop.json
-            alist-desktop-proxy.json
-
   release:
-    needs: create_release_tag
     strategy:
       fail-fast: false
       matrix:
@@ -124,15 +69,25 @@ jobs:
           tagName: ${{ github.ref_name }} # This only works if your workflow triggers on new tags.
           releaseId: ${{ needs.create_release_tag.outputs.release_id }}
           releaseName: "AList-Desktop v__VERSION__" # tauri-action replaces \_\_VERSION\_\_ with the app version.
-          releaseDraft: false
 
-  replace_sign:
-    name: "Replace signature"
+  build_updater:
+    name: "Build updater"
     needs: release
+    environment: ${{ github.event.inputs.environment || 'Beta' }}
     runs-on: ubuntu-latest
+    outputs:
+      release_id: ${{ steps.create_release.outputs.id }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          repository: alist-org/desktop
+          token: ${{ secrets.MY_TOKEN }}
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 7
+          run_install: false
 
       - name: Sync node version and setup cache
         uses: actions/setup-node@v3
@@ -142,11 +97,31 @@ jobs:
 
       - name: Replace version
         run: |
-          npx tsx ./sign.ts
+          npx tsx ./scripts/version.ts
+          cat src-tauri/tauri.conf.json
+        env:
+          AD_VERSION: ${{ github.ref_name }}
+
+      - name: Build alist-desktop.json with proxy
+        run: |
+          npx tsx ./scripts/updater.ts
+          cat alist-desktop.json
+          mv alist-desktop.json alist-desktop-proxy.json
+        env:
+          BASE: https://ghproxy.com/https://github.com/alist-org/desktop-release
+
+      - name: Build alist-desktop.json
+        run: |
+          npx tsx ./scripts/updater.ts
+          cat alist-desktop.json
+
+      - name: Replace version
+        run: |
+          npx tsx ./scripts/sign.ts
           cat alist-desktop.json
           cat alist-desktop-proxy.json
 
-      - name: Update alist-desktop.json
+      - name: Create release and Upload alist-desktop.json
         id: create_release
         uses: softprops/action-gh-release@v1
         with:
