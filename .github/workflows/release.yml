@@ -115,7 +115,7 @@ jobs:
           npx tsx ./scripts/updater.ts
           cat alist-desktop.json
 
-      - name: Replace version
+      - name: Replace signature
         run: |
           npx tsx ./scripts/sign.ts
           cat alist-desktop.json
