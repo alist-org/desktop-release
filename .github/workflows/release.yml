@@ -11,14 +11,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # - os: macos-latest
-          #   target: x86_64-apple-darwin
-          # - os: ubuntu-20.04
-          #   target: x86_64-unknown-linux-gnu
-          # - os: windows-latest
-          #   target: x86_64-pc-windows-msvc
-          # - os: macos-latest
-          #   target: aarch64-apple-darwin
+          - os: macos-latest
+            target: x86_64-apple-darwin
+          - os: ubuntu-20.04
+            target: x86_64-unknown-linux-gnu
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+          - os: macos-latest
+            target: aarch64-apple-darwin
           - os: ubuntu-20.04
             target: aarch64-unknown-linux-gnu
 
@@ -107,14 +107,9 @@ jobs:
     needs: release
     environment: ${{ github.event.inputs.environment || 'Beta' }}
     runs-on: ubuntu-latest
-    outputs:
-      release_id: ${{ steps.create_release.outputs.id }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-        with:
-          repository: alist-dev/desktop
-          token: ${{ secrets.MY_TOKEN }}
 
       - uses: pnpm/action-setup@v2
         with:
@@ -127,37 +122,16 @@ jobs:
           node-version: "lts/*"
           # cache: "pnpm" # Set this to npm, yarn or pnpm.
 
-      - name: Replace version
+      - name: Generate proxy.json
         run: |
-          npx tsx ./scripts/version.ts
-          cat src-tauri/tauri.conf.json
+          npx tsx ./proxy.ts
+          cat proxy.json
         env:
-          AD_VERSION: ${{ github.ref_name }}
+          REPO: ${{ github.repository }}
 
-      - name: Build alist-desktop.json with proxy
-        run: |
-          npx tsx ./scripts/updater.ts
-          cat alist-desktop.json
-          mv alist-desktop.json alist-desktop-proxy.json
-        env:
-          BASE: https://ghproxy.com/https://github.com/alist-org/desktop-release
-
-      - name: Build alist-desktop.json
-        run: |
-          npx tsx ./scripts/updater.ts
-          cat alist-desktop.json
-
-      - name: Replace signature
-        run: |
-          npx tsx ./scripts/sign.ts
-          cat alist-desktop.json
-          cat alist-desktop-proxy.json
-
-      - name: Create release and Upload alist-desktop.json
-        id: create_release
+      - name: Upload proxy.json
         uses: softprops/action-gh-release@v1
         with:
           fail_on_unmatched_files: true
           files: |
-            alist-desktop.json
-            alist-desktop-proxy.json
+            proxy.json
