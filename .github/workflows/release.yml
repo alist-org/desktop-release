@@ -10,8 +10,21 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [macos-latest, ubuntu-20.04, windows-latest]
-    runs-on: ${{ matrix.platform }}
+        include:
+          - os: macos-latest
+            target: x86_64-apple-darwin
+          - os: ubuntu-20.04
+            target: x86_64-unknown-linux-gnu
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+          - os: macos-latest
+            target: aarch64-apple-darwin
+          - os: ubuntu-20.04
+            target: aarch64-unknown-linux-gnu
+          - os: windows-latest
+            target: aarch64-pc-windows-msvc
+
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -20,7 +33,7 @@ jobs:
           token: ${{ secrets.MY_TOKEN }}
 
       - name: Install dependencies (ubuntu only)
-        if: matrix.platform == 'ubuntu-20.04'
+        if: matrix.os == 'ubuntu-20.04'
         # You can remove libayatana-appindicator3-dev if you don't use the system tray feature.
         run: |
           sudo apt-get update
@@ -28,6 +41,8 @@ jobs:
 
       - name: Rust setup
         uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
 
       - name: Rust cache
         uses: swatinem/rust-cache@v2
@@ -57,8 +72,8 @@ jobs:
 
       - name: Download sidecar
         run: npx tsx ./scripts/bin.ts
-        env: 
-          ALIST_DESKTOP_SECRET: ${{ secrets.ALIST_DESKTOP_SECRET }}
+        env:
+          TARGET_TRIPLE: ${{ matrix.target }}
 
       - name: Build the app
         uses: tauri-apps/tauri-action@v0
@@ -67,8 +82,9 @@ jobs:
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
         with:
           tagName: ${{ github.ref_name }} # This only works if your workflow triggers on new tags.
-          releaseName: 'AList Desktop v__VERSION__' # tauri-action replaces \_\_VERSION\_\_ with the app version.
-          releaseBody: 'See the assets to download and install this version.'
+          releaseName: "AList Desktop v__VERSION__" # tauri-action replaces \_\_VERSION\_\_ with the app version.
+          releaseBody: "See the assets to download and install this version."
+          args: "--target ${{ matrix.target }}"
 
   build_updater:
     name: "Build updater"
