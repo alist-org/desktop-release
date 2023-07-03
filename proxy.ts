@@ -1,6 +1,4 @@
 import fs from "fs";
-import path from "path";
-const files = ["alist-desktop-proxy.json", "alist-desktop.json"];
 
 interface Updater {
   name: string;
@@ -14,9 +12,9 @@ interface Updater {
   };
 }
 
-console.log(process.env);
+// console.log(process.env);
 
-const repo = process.env.REPO || process.env.GITHUB_REPOSITORY!;
+const repo = process.env.GITHUB_REPOSITORY!;
 
 const generateProxy = async () => {
   const res = await fetch(

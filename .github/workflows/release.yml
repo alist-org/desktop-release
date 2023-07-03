@@ -126,12 +126,11 @@ jobs:
         run: |
           npx tsx ./proxy.ts
           cat proxy.json
-        env:
-          REPO: ${{ github.repository }}
 
       - name: Upload proxy.json
         uses: softprops/action-gh-release@v1
         with:
           fail_on_unmatched_files: true
+          token: ${{ secrets.MY_TOKEN }}
           files: |
             proxy.json
