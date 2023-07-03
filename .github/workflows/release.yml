@@ -29,7 +29,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
-          repository: alist-org/desktop
+          repository: alist-dev/desktop
           token: ${{ secrets.MY_TOKEN }}
 
       - name: Install dependencies (ubuntu only)
@@ -74,6 +74,8 @@ jobs:
         run: npx tsx ./scripts/bin.ts
         env:
           TARGET_TRIPLE: ${{ matrix.target }}
+          ALIST_VERSION: v3.19.0
+          RCLONE_VERSION: v1.63.0
 
       - name: Build the app
         uses: tauri-apps/tauri-action@v0
@@ -97,7 +99,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
-          repository: alist-org/desktop
+          repository: alist-dev/desktop
           token: ${{ secrets.MY_TOKEN }}
 
       - uses: pnpm/action-setup@v2
