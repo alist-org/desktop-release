@@ -10,24 +10,38 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [macos-latest, ubuntu-20.04, windows-latest]
-    runs-on: ${{ matrix.platform }}
+        include:
+          - os: macos-latest
+            target: x86_64-apple-darwin
+          - os: ubuntu-20.04
+            target: x86_64-unknown-linux-gnu
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+          - os: macos-latest
+            target: aarch64-apple-darwin
+          # - os: ubuntu-20.04
+          #   target: aarch64-unknown-linux-gnu
+
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
-          repository: alist-org/desktop
+          repository: alist-dev/desktop
           token: ${{ secrets.MY_TOKEN }}
 
       - name: Install dependencies (ubuntu only)
-        if: matrix.platform == 'ubuntu-20.04'
+        if: matrix.os == 'ubuntu-20.04'
         # You can remove libayatana-appindicator3-dev if you don't use the system tray feature.
         run: |
           sudo apt-get update
           sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libayatana-appindicator3-dev librsvg2-dev
+          # sudo apt-get install -y libssl-dev pkg-config gcc-10-aarch64-linux-gnu
 
       - name: Rust setup
         uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
 
       - name: Rust cache
         uses: swatinem/rust-cache@v2
@@ -55,34 +69,47 @@ jobs:
         env:
           AD_VERSION: ${{ github.ref_name }}
 
+      - name: Get AList version
+        id: get-alist-version
+        uses: fangqiuming/latest-release-version@v1.2.0-beta
+        with:
+          repository: alist-org/alist
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get Rclone version
+        id: get-rclone-version
+        uses: fangqiuming/latest-release-version@v1.2.0-beta
+        with:
+          repository: rclone/rclone
+          token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Download sidecar
         run: npx tsx ./scripts/bin.ts
-        env: 
-          ALIST_DESKTOP_SECRET: ${{ secrets.ALIST_DESKTOP_SECRET }}
+        env:
+          TARGET_TRIPLE: ${{ matrix.target }}
+          ALIST_VERSION: ${{ steps.get-alist-version.outputs.tag_name }} # v3.19.0
+          RCLONE_VERSION: ${{ steps.get-rclone-version.outputs.tag_name }} # v1.63.0
 
       - name: Build the app
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.MY_TOKEN }}
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+          # PKG_CONFIG_ALLOW_CROSS: ${{ contains(matrix.target, 'aarch64') && '1' || '' }}
         with:
           tagName: ${{ github.ref_name }} # This only works if your workflow triggers on new tags.
-          releaseName: 'AList Desktop v__VERSION__' # tauri-action replaces \_\_VERSION\_\_ with the app version.
-          releaseBody: 'See the assets to download and install this version.'
+          releaseName: "AList Desktop v__VERSION__" # tauri-action replaces \_\_VERSION\_\_ with the app version.
+          releaseBody: "See the assets to download and install this version."
+          args: "--target ${{ matrix.target }}"
 
   build_updater:
     name: "Build updater"
     needs: release
     environment: ${{ github.event.inputs.environment || 'Beta' }}
     runs-on: ubuntu-latest
-    outputs:
-      release_id: ${{ steps.create_release.outputs.id }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-        with:
-          repository: alist-org/desktop
-          token: ${{ secrets.MY_TOKEN }}
 
       - uses: pnpm/action-setup@v2
         with:
@@ -95,37 +122,15 @@ jobs:
           node-version: "lts/*"
           # cache: "pnpm" # Set this to npm, yarn or pnpm.
 
-      - name: Replace version
+      - name: Generate proxy.json
         run: |
-          npx tsx ./scripts/version.ts
-          cat src-tauri/tauri.conf.json
-        env:
-          AD_VERSION: ${{ github.ref_name }}
+          npx tsx ./proxy.ts
+          cat proxy.json
 
-      - name: Build alist-desktop.json with proxy
-        run: |
-          npx tsx ./scripts/updater.ts
-          cat alist-desktop.json
-          mv alist-desktop.json alist-desktop-proxy.json
-        env:
-          BASE: https://ghproxy.com/https://github.com/alist-org/desktop-release
-
-      - name: Build alist-desktop.json
-        run: |
-          npx tsx ./scripts/updater.ts
-          cat alist-desktop.json
-
-      - name: Replace signature
-        run: |
-          npx tsx ./scripts/sign.ts
-          cat alist-desktop.json
-          cat alist-desktop-proxy.json
-
-      - name: Create release and Upload alist-desktop.json
-        id: create_release
+      - name: Upload proxy.json
         uses: softprops/action-gh-release@v1
         with:
           fail_on_unmatched_files: true
+          token: ${{ secrets.MY_TOKEN }}
           files: |
-            alist-desktop.json
-            alist-desktop-proxy.json
+            proxy.json
