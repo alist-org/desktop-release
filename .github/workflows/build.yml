@@ -1,0 +1,109 @@
+name: Build
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - os: macos-latest
+            target: x86_64-apple-darwin
+          - os: ubuntu-20.04
+            target: x86_64-unknown-linux-gnu
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+          - os: macos-latest
+            target: aarch64-apple-darwin
+          # - os: ubuntu-20.04
+          #   target: aarch64-unknown-linux-gnu
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          repository: alist-dev/desktop
+          token: ${{ secrets.MY_TOKEN }}
+
+      - name: Install dependencies (ubuntu only)
+        if: matrix.os == 'ubuntu-20.04'
+        # You can remove libayatana-appindicator3-dev if you don't use the system tray feature.
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libayatana-appindicator3-dev librsvg2-dev
+          # sudo apt-get install -y libssl-dev pkg-config gcc-10-aarch64-linux-gnu
+
+      - name: Rust setup
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: "./src-tauri -> target"
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 7
+          run_install: false
+
+      - name: Sync node version and setup cache
+        uses: actions/setup-node@v3
+        with:
+          node-version: "lts/*"
+          cache: "pnpm" # Set this to npm, yarn or pnpm.
+
+      - name: Install app dependencies and build web
+        run: pnpm i
+
+      - name: Replace version
+        run: |
+          npx tsx ./scripts/version.ts
+          cat src-tauri/tauri.conf.json
+        env:
+          AD_VERSION: ${{ github.ref_name }}
+
+      - name: Get AList version
+        id: get-alist-version
+        uses: fangqiuming/latest-release-version@v1.2.0-beta
+        with:
+          repository: alist-org/alist
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get Rclone version
+        id: get-rclone-version
+        uses: fangqiuming/latest-release-version@v1.2.0-beta
+        with:
+          repository: rclone/rclone
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download sidecar
+        run: npx tsx ./scripts/bin.ts
+        env:
+          TARGET_TRIPLE: ${{ matrix.target }}
+          ALIST_VERSION: ${{ steps.get-alist-version.outputs.tag_name }} # v3.19.0
+          RCLONE_VERSION: ${{ steps.get-rclone-version.outputs.tag_name }} # v1.63.0
+
+      - name: Build the app
+        # uses: tauri-apps/tauri-action@v0
+        run:
+          pnpm tauri build --target ${{ matrix.target }} --debug
+          tree
+        env:
+          # GITHUB_TOKEN: ${{ secrets.MY_TOKEN }}
+          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+          # PKG_CONFIG_ALLOW_CROSS: ${{ contains(matrix.target, 'aarch64') && '1' || '' }}
+        # with:
+        #   tagName: ${{ github.ref_name }} # This only works if your workflow triggers on new tags.
+        #   releaseName: "AList Desktop v__VERSION__" # tauri-action replaces \_\_VERSION\_\_ with the app version.
+        #   releaseBody: "See the assets to download and install this version."
+        #   args: "--target ${{ matrix.target }}"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: alist-${{ matrix.target }}
+          path: ./src-tauri/target/${{ matrix.target }}/debug/alist-desktop${{ matrix.os == 'windows-latest' && '.exe' || '' }}
