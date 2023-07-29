@@ -5,17 +5,21 @@ on:
 jobs:
   build:
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         include:
           - os: macos-latest
             target: x86_64-apple-darwin
+            bundle: bundle/macos/alist-desktop.app
           - os: ubuntu-20.04
             target: x86_64-unknown-linux-gnu
+            bundle: bundle/deb/alist-desktop_0.0.0_amd64.deb
           - os: windows-latest
             target: x86_64-pc-windows-msvc
+            bundle: bundle/msi/alist-desktop_0.0.0_x64_en-US.msi
           - os: macos-latest
             target: aarch64-apple-darwin
+            bundle: bundle/macos/alist-desktop.app
           # - os: ubuntu-20.04
           #   target: aarch64-unknown-linux-gnu
 
@@ -91,7 +95,6 @@ jobs:
         # uses: tauri-apps/tauri-action@v0
         run: |
           pnpm tauri build --target ${{ matrix.target }} --debug
-          tree
         env:
           # GITHUB_TOKEN: ${{ secrets.MY_TOKEN }}
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
@@ -106,4 +109,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: alist-${{ matrix.target }}
-          path: ./src-tauri/target/${{ matrix.target }}/debug/alist-desktop${{ matrix.os == 'windows-latest' && '.exe' || '' }}
+          path: ./src-tauri/target/${{ matrix.target }}/debug/${{ matrix.bundle }}
