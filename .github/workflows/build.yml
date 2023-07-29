@@ -59,12 +59,12 @@ jobs:
       - name: Install app dependencies and build web
         run: pnpm i
 
-      - name: Replace version
-        run: |
-          npx tsx ./scripts/version.ts
-          cat src-tauri/tauri.conf.json
-        env:
-          AD_VERSION: ${{ github.ref_name }}
+      # - name: Replace version
+      #   run: |
+      #     npx tsx ./scripts/version.ts
+      #     cat src-tauri/tauri.conf.json
+      #   env:
+      #     AD_VERSION: ${{ github.ref_name }}
 
       - name: Get AList version
         id: get-alist-version
@@ -89,7 +89,7 @@ jobs:
 
       - name: Build the app
         # uses: tauri-apps/tauri-action@v0
-        run:
+        run: |
           pnpm tauri build --target ${{ matrix.target }} --debug
           tree
         env:
