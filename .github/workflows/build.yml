@@ -26,7 +26,7 @@ jobs:
           #   args:
           - os: windows-latest
             target: aarch64-pc-windows-msvc
-            bundle: bundle/nsis/alist-desktop_0.0.0_arm64_setup.exe
+            bundle: bundle/nsis/alist-desktop_0.0.0_arm64-setup.exe
             args: --bundles nsis
 
     runs-on: ${{ matrix.os }}
