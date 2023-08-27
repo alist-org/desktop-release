@@ -8,20 +8,21 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: macos-latest
-            target: x86_64-apple-darwin
-            bundle: bundle/macos/alist-desktop.app
-          - os: ubuntu-20.04
-            target: x86_64-unknown-linux-gnu
-            bundle: bundle/deb/alist-desktop_0.0.0_amd64.deb
-          - os: windows-latest
-            target: x86_64-pc-windows-msvc
-            bundle: bundle/msi/alist-desktop_0.0.0_x64_en-US.msi
-          - os: macos-latest
-            target: aarch64-apple-darwin
-            bundle: bundle/macos/alist-desktop.app
+          # - os: macos-latest
+          #   target: x86_64-apple-darwin
+          #   bundle: bundle/macos/alist-desktop.app
           # - os: ubuntu-20.04
-          #   target: aarch64-unknown-linux-gnu
+          #   target: x86_64-unknown-linux-gnu
+          #   bundle: bundle/deb/alist-desktop_0.0.0_amd64.deb
+          # - os: windows-latest
+          #   target: x86_64-pc-windows-msvc
+          #   bundle: bundle/msi/alist-desktop_0.0.0_x64_en-US.msi
+          # - os: macos-latest
+          #   target: aarch64-apple-darwin
+          #   bundle: bundle/macos/alist-desktop.app
+          - os: ubuntu-20.04
+            target: aarch64-unknown-linux-gnu
+            bundle: bundle/deb/alist-desktop_0.0.0_arm64.deb
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -88,8 +89,8 @@ jobs:
         run: npx tsx ./scripts/bin.ts
         env:
           TARGET_TRIPLE: ${{ matrix.target }}
-          ALIST_VERSION: ${{ steps.get-alist-version.outputs.tag_name }} # v3.19.0
-          RCLONE_VERSION: ${{ steps.get-rclone-version.outputs.tag_name }} # v1.63.0
+          ALIST_VERSION: ${{ steps.get-alist-version.outputs.tag_name }}
+          RCLONE_VERSION: ${{ steps.get-rclone-version.outputs.tag_name }}
 
       - name: Build the app
         # uses: tauri-apps/tauri-action@v0
@@ -104,6 +105,11 @@ jobs:
         #   releaseName: "AList Desktop v__VERSION__" # tauri-action replaces \_\_VERSION\_\_ with the app version.
         #   releaseBody: "See the assets to download and install this version."
         #   args: "--target ${{ matrix.target }}"
+
+      - name: Show file
+        continue-on-error: true
+        run: |
+          ls -l ./src-tauri/target/${{ matrix.target }}/debug
 
       - name: Upload artifact
         uses: actions/upload-artifact@v3
