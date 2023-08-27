@@ -20,14 +20,15 @@ jobs:
           # - os: macos-latest
           #   target: aarch64-apple-darwin
           #   bundle: bundle/macos/alist-desktop.app
-          - os: ubuntu-20.04
-            target: aarch64-unknown-linux-musl
-            bundle: bundle/deb/alist-desktop_0.0.0_arm64.deb
-            args:
+          # - os: ubuntu-latest
+          #   target: aarch64-unknown-linux-musl
+          #   bundle: bundle/deb/alist-desktop_0.0.0_arm64.deb
+          #   args:
           - os: windows-latest
             target: aarch64-pc-windows-msvc
             bundle: bundle/msi/alist-desktop_0.0.0_arm64_setup.exe
-            args: --bundles nsis
+            args:
+            # args: --bundles nsis
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -38,7 +39,7 @@ jobs:
           token: ${{ secrets.MY_TOKEN }}
 
       - name: Install dependencies (ubuntu only)
-        if: matrix.os == 'ubuntu-20.04'
+        if: matrix.os == 'ubuntu-latest'
         # You can remove libayatana-appindicator3-dev if you don't use the system tray feature.
         run: |
           sudo apt-get update
@@ -105,6 +106,7 @@ jobs:
           # GITHUB_TOKEN: ${{ secrets.MY_TOKEN }}
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           # PKG_CONFIG_ALLOW_CROSS: ${{ contains(matrix.target, 'aarch64') && '1' || '' }}
+          PKG_CONFIG_SYSROOT_DIR: /usr/aarch64-linux-gnu
         # with:
         #   tagName: ${{ github.ref_name }} # This only works if your workflow triggers on new tags.
         #   releaseName: "AList Desktop v__VERSION__" # tauri-action replaces \_\_VERSION\_\_ with the app version.
@@ -114,7 +116,8 @@ jobs:
       - name: Show file
         continue-on-error: true
         run: |
-          ls -l ./src-tauri/target/${{ matrix.target }}/debug
+          ls -l ./src-tauri/target/${{ matrix.target }}/debug/bundle
+          tree ./src-tauri/target/${{ matrix.target }}/debug/bundle
 
       - name: Upload artifact
         uses: actions/upload-artifact@v3
