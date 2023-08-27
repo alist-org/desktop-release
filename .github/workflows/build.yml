@@ -100,12 +100,11 @@ jobs:
       - name: Build the app
         # uses: tauri-apps/tauri-action@v0
         run: |
-          pnpm tauri build --target ${{ matrix.target }} --debug ${{ matrix.args }}
+          pnpm tauri build --target ${{ matrix.target }} ${{ matrix.args }}
         env:
           # GITHUB_TOKEN: ${{ secrets.MY_TOKEN }}
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           # PKG_CONFIG_ALLOW_CROSS: ${{ contains(matrix.target, 'aarch64') && '1' || '' }}
-          PKG_CONFIG_SYSROOT_DIR: /usr/aarch64-linux-gnu
         # with:
         #   tagName: ${{ github.ref_name }} # This only works if your workflow triggers on new tags.
         #   releaseName: "AList Desktop v__VERSION__" # tauri-action replaces \_\_VERSION\_\_ with the app version.
@@ -115,11 +114,11 @@ jobs:
       - name: Show file
         continue-on-error: true
         run: |
-          ls -l ./src-tauri/target/${{ matrix.target }}/debug/bundle
-          tree ./src-tauri/target/${{ matrix.target }}/debug/bundle
+          ls -l ./src-tauri/target/${{ matrix.target }}/release/bundle/nsis
+          tree ./src-tauri/target/${{ matrix.target }}/release/bundle
 
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
           name: alist-${{ matrix.target }}
-          path: ./src-tauri/target/${{ matrix.target }}/debug/${{ matrix.bundle }}
+          path: ./src-tauri/target/${{ matrix.target }}/release/${{ matrix.bundle }}

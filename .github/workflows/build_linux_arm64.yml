@@ -37,11 +37,21 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         # You can remove libayatana-appindicator3-dev if you don't use the system tray feature.
         run: |
+          sudo cat > /etc/apt/sources.list <<EOF
+
+          deb http://ports.ubuntu.com/ubuntu-ports/ focal main restricted universe multiverse
+          deb http://ports.ubuntu.com/ubuntu-ports/ focal main restricted universe multiverse
+          deb http://ports.ubuntu.com/ubuntu-ports/ focal-security main restricted universe multiverse
+          deb http://ports.ubuntu.com/ubuntu-ports/ focal-updates main restricted universe multiverse
+          deb http://ports.ubuntu.com/ubuntu-ports/ focal-backports main restricted universe multiverse
+
+          EOF
+
           # https://ubuntu.com/blog/statement-on-32-bit-i386-packages-for-ubuntu-19-10-and-20-04-lts
           # https://askubuntu.com/questions/1252062/how-to-install-libncurses-so-5-in-ubuntu-20-04
           # https://askubuntu.com/questions/522372/installing-32-bit-libraries-on-ubuntu-14-04-lts-64-bit
           # sudo add-apt-repository universe
-          sudo dpkg --add-architecture arm64 
+          sudo dpkg --add-architecture arm64
           sudo apt update
           # install both 32-bit and 64-bit prerequisites of tauri
           # libayatana-appindicator3-dev is the successor of libappindicator3-dev and 64-bit only
@@ -53,19 +63,19 @@ jobs:
           sudo apt install -y --allow-downgrades \
             gcc-multilib \
             g++-multilib
-          echo install 32-bit dependences ...
+          echo install arm64 dependences ...
           sudo apt install -y --allow-downgrades \
             libwebkit2gtk-4.0-dev:arm64 \
             libssl-dev:arm64 \
             libgtk-3-dev:arm64 \
             librsvg2-dev:arm64 || echo "install 32-bit dependences failed! Check the logs for details."
-          echo install dependences ...
-          sudo apt install -y --allow-downgrades \
-            libwebkit2gtk-4.0-dev \
-            libssl-dev \
-            libgtk-3-dev \
-            librsvg2-dev \
-            libayatana-appindicator3-dev
+          # echo install dependences ...
+          # sudo apt install -y --allow-downgrades \
+          #   libwebkit2gtk-4.0-dev \
+          #   libssl-dev \
+          #   libgtk-3-dev \
+          #   librsvg2-dev \
+          #   libayatana-appindicator3-dev
           # use cross to build, so the dependencies are not required!
           # # check docker
           # docker -v
@@ -134,12 +144,11 @@ jobs:
         run: |
           export PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig/:$PKG_CONFIG_PATH
           export PKG_CONFIG_SYSROOT_DIR=/
-          pnpm tauri build --target ${{ matrix.target }} --debug ${{ matrix.args }}
+          pnpm tauri build --target ${{ matrix.target }} ${{ matrix.args }}
         env:
           # GITHUB_TOKEN: ${{ secrets.MY_TOKEN }}
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           # PKG_CONFIG_ALLOW_CROSS: ${{ contains(matrix.target, 'aarch64') && '1' || '' }}
-          PKG_CONFIG_SYSROOT_DIR: /usr/aarch64-linux-gnu
         # with:
         #   tagName: ${{ github.ref_name }} # This only works if your workflow triggers on new tags.
         #   releaseName: "AList Desktop v__VERSION__" # tauri-action replaces \_\_VERSION\_\_ with the app version.
@@ -149,11 +158,11 @@ jobs:
       - name: Show file
         continue-on-error: true
         run: |
-          ls -l ./src-tauri/target/${{ matrix.target }}/debug/bundle
-          tree ./src-tauri/target/${{ matrix.target }}/debug/bundle
+          ls -l ./src-tauri/target/${{ matrix.target }}/release/bundle
+          tree ./src-tauri/target/${{ matrix.target }}/release/bundle
 
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
           name: alist-${{ matrix.target }}
-          path: ./src-tauri/target/${{ matrix.target }}/debug/${{ matrix.bundle }}
+          path: ./src-tauri/target/${{ matrix.target }}/release/${{ matrix.bundle }}
