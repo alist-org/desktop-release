@@ -21,8 +21,13 @@ jobs:
           #   target: aarch64-apple-darwin
           #   bundle: bundle/macos/alist-desktop.app
           - os: ubuntu-20.04
-            target: aarch64-unknown-linux-gnu
+            target: aarch64-unknown-linux-musl
             bundle: bundle/deb/alist-desktop_0.0.0_arm64.deb
+            args:
+          - os: windows-latest
+            target: aarch64-pc-windows-msvc
+            bundle: bundle/msi/alist-desktop_0.0.0_arm64_setup.exe
+            args: --bundles nsis
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -95,7 +100,7 @@ jobs:
       - name: Build the app
         # uses: tauri-apps/tauri-action@v0
         run: |
-          pnpm tauri build --target ${{ matrix.target }} --debug
+          pnpm tauri build --target ${{ matrix.target }} --debug ${{ matrix.args }}
         env:
           # GITHUB_TOKEN: ${{ secrets.MY_TOKEN }}
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
