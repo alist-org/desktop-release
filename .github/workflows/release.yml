@@ -13,12 +13,19 @@ jobs:
         include:
           - os: macos-latest
             target: x86_64-apple-darwin
+            args:
           - os: ubuntu-20.04
             target: x86_64-unknown-linux-gnu
+            args:
           - os: windows-latest
             target: x86_64-pc-windows-msvc
+            args:
           - os: macos-latest
             target: aarch64-apple-darwin
+            args:
+          - os: windows-latest
+            target: aarch64-pc-windows-msvc
+            args: --bundles nsis
           # - os: ubuntu-20.04
           #   target: aarch64-unknown-linux-gnu
 
@@ -100,7 +107,7 @@ jobs:
           tagName: ${{ github.ref_name }} # This only works if your workflow triggers on new tags.
           releaseName: "AList Desktop v__VERSION__" # tauri-action replaces \_\_VERSION\_\_ with the app version.
           releaseBody: "See the assets to download and install this version."
-          args: "--target ${{ matrix.target }}"
+          args: "--target ${{ matrix.target }} ${{ matrix.args }}"
 
   build_updater:
     name: "Build updater"
