@@ -140,4 +140,4 @@ jobs:
           fail_on_unmatched_files: true
           token: ${{ secrets.MY_TOKEN }}
           files: |
-            proxy.json
+            *.proxy.json
