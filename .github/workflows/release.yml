@@ -120,7 +120,7 @@ jobs:
 
       - uses: pnpm/action-setup@v2
         with:
-          version: 7
+          version: 8
           run_install: false
 
       - name: Sync node version and setup cache
@@ -132,7 +132,6 @@ jobs:
       - name: Generate proxy.json
         run: |
           npx tsx ./proxy.ts
-          cat proxy.json
 
       - name: Upload proxy.json
         uses: softprops/action-gh-release@v1
@@ -140,4 +139,4 @@ jobs:
           fail_on_unmatched_files: true
           token: ${{ secrets.MY_TOKEN }}
           files: |
-            proxy.json
+            *.proxy.json
