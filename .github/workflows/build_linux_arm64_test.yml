@@ -12,6 +12,7 @@ jobs:
           token: ${{ secrets.MY_TOKEN }}
 
       - uses: pguyot/arm-runner-action@v2.5.2
+        continue-on-error: true
         with:
           base_image: https://dietpi.com/downloads/images/DietPi_RPi-ARMv8-Bullseye.7z
           cpu: cortex-a53
@@ -47,7 +48,7 @@ jobs:
             # pnpm i
             # Build the application
             # cargo tauri build
-            npm run tauri build
+            npm run tauri build 
             
       - name: Upload deb bundle
         uses: actions/upload-artifact@v3
