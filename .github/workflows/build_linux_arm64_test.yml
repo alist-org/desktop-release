@@ -50,8 +50,14 @@ jobs:
             # cargo tauri build
             npm run tauri build 
             
+      - name: print files tree
+        continue-on-error: true
+        run: |
+          sudo apt install -y tree
+          tree -C
+
       - name: Upload deb bundle
         uses: actions/upload-artifact@v3
         with:
           name: Debian Bundle
-          path: ${{ github.workspace }}/target/release/bundle/deb/
+          path: ${{ github.workspace }}/
