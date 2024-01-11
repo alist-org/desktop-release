@@ -39,7 +39,8 @@ jobs:
             # cargo install tauri-cli
             # Install frontend dependencies
             npm install
-            npm install -g pnpm
+            sed -i 's/pnpm/npm run/g' src-tauri/tauri.conf.json
+            # npm install -g pnpm
             # pnpm i
             # Build the application
             # cargo tauri build
