@@ -13,6 +13,9 @@ jobs:
 
       - uses: pguyot/arm-runner-action@v2.5.2
         continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.MY_TOKEN }}
+          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
         with:
           base_image: https://dietpi.com/downloads/images/DietPi_RPi-ARMv8-Bullseye.7z
           cpu: cortex-a53
@@ -42,6 +45,7 @@ jobs:
             npm install
             # download sidecar
             export TARGET_TRIPLE=aarch64-unknown-linux-gnu
+            export TAURI_PRIVATE_KEY=${{ secrets.TAURI_PRIVATE_KEY }}
             npx tsx ./scripts/bin.ts
             sed -i 's/pnpm/npm run/g' src-tauri/tauri.conf.json
             # npm install -g pnpm
@@ -60,4 +64,6 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: Debian Bundle
-          path: ${{ github.workspace }}/
+          path: |
+            ${{ github.workspace }}/src-tauri/target/release/bundle/deb/
+            ./src-tauri/target/release/bundle/deb
