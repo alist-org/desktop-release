@@ -58,12 +58,12 @@ jobs:
         continue-on-error: true
         run: |
           sudo apt install -y tree
-          tree -C
+          tree -C ./src-tauri/target/
 
       - name: Upload deb bundle
         uses: actions/upload-artifact@v3
         with:
           name: Debian Bundle
+          # ${{ github.workspace }}/src-tauri/target/release/bundle/deb/
           path: |
-            ${{ github.workspace }}/src-tauri/target/release/bundle/deb/
             ./src-tauri/target/release/bundle/deb
