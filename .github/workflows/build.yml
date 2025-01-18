@@ -80,12 +80,12 @@ jobs:
       #   env:
       #     AD_VERSION: ${{ github.ref_name }}
 
-      - name: Get AList version
-        id: get-alist-version
-        uses: fangqiuming/latest-release-version@v1.2.0-beta
-        with:
-          repository: alist-org/alist
-          token: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Get AList version
+      #   id: get-alist-version
+      #   uses: fangqiuming/latest-release-version@v1.2.0-beta
+      #   with:
+      #     repository: alist-org/alist
+      #     token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Get Rclone version
         id: get-rclone-version
@@ -98,7 +98,7 @@ jobs:
         run: npx tsx ./scripts/bin.ts
         env:
           TARGET_TRIPLE: ${{ matrix.target }}
-          ALIST_VERSION: ${{ steps.get-alist-version.outputs.tag_name }}
+          ALIST_VERSION: beta
           RCLONE_VERSION: ${{ steps.get-rclone-version.outputs.tag_name }}
 
       - name: Build the app
