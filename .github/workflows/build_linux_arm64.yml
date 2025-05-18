@@ -162,7 +162,7 @@ jobs:
           tree ./src-tauri/target/${{ matrix.target }}/release/bundle
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: alist-${{ matrix.target }}
           path: ./src-tauri/target/${{ matrix.target }}/release/${{ matrix.bundle }}
