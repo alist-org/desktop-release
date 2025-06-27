@@ -14,7 +14,7 @@ jobs:
           - os: macos-latest
             target: x86_64-apple-darwin
             args:
-          - os: ubuntu-20.04
+          - os: ubuntu-22.04
             target: x86_64-unknown-linux-gnu
             args:
           - os: windows-latest
@@ -26,7 +26,7 @@ jobs:
           - os: windows-latest
             target: aarch64-pc-windows-msvc
             args: --bundles nsis,updater
-          # - os: ubuntu-20.04
+          # - os: ubuntu-22.04
           #   target: aarch64-unknown-linux-gnu
 
     runs-on: ${{ matrix.os }}
@@ -38,7 +38,7 @@ jobs:
           token: ${{ secrets.MY_TOKEN }}
 
       - name: Install dependencies (ubuntu only)
-        if: matrix.os == 'ubuntu-20.04'
+        if: matrix.os == 'ubuntu-22.04'
         # You can remove libayatana-appindicator3-dev if you don't use the system tray feature.
         run: |
           sudo apt-get update
@@ -57,7 +57,7 @@ jobs:
 
       - uses: pnpm/action-setup@v2
         with:
-          version: 8
+          version: 9
           run_install: false
 
       - name: Sync node version and setup cache
@@ -80,7 +80,7 @@ jobs:
         id: get-alist-version
         uses: fangqiuming/latest-release-version@v1.2.0-beta
         with:
-          repository: alist-org/alist
+          repository: AlistGo/alist
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Get Rclone version
@@ -100,7 +100,7 @@ jobs:
       - name: Build the app
         uses: tauri-apps/tauri-action@v0
         env:
-          GITHUB_TOKEN: ${{ secrets.MY_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           # PKG_CONFIG_ALLOW_CROSS: ${{ contains(matrix.target, 'aarch64') && '1' || '' }}
         with:
@@ -120,7 +120,7 @@ jobs:
 
       - uses: pnpm/action-setup@v2
         with:
-          version: 8
+          version: 9
           run_install: false
 
       - name: Sync node version and setup cache
@@ -137,6 +137,6 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           fail_on_unmatched_files: true
-          token: ${{ secrets.MY_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           files: |
             *.proxy.json

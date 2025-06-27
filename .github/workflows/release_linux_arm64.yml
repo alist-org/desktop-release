@@ -20,7 +20,7 @@ jobs:
 
       - uses: pnpm/action-setup@v2
         with:
-          version: 8
+          version: 9
           run_install: false
 
       - name: Sync node version and setup cache
@@ -43,7 +43,7 @@ jobs:
         id: get-alist-version
         uses: fangqiuming/latest-release-version@v1.2.0-beta
         with:
-          repository: alist-org/alist
+          repository: AlistGo/alist
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Get Rclone version
