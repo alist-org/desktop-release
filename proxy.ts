@@ -15,11 +15,14 @@ interface Updater {
 // console.log(process.env);
 
 const repo = process.env.GITHUB_REPOSITORY!;
+const version = process.env.VERSION;
 
 async function getUpdater() {
-  const res = await fetch(
-    `https://github.com/${repo}/releases/latest/download/latest.json`
-  );
+  let url = `https://github.com/${repo}/releases/download/${version}/latest.json`;
+  if (!version) {
+    url = `https://github.com/${repo}/releases/latest/download/latest.json`;
+  }
+  const res = await fetch(url);
   const content = await res.json();
   const updater: Updater = content;
   return updater;

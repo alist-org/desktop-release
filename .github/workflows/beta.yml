@@ -158,6 +158,8 @@ jobs:
       - name: Generate proxy.json
         run: |
           npx tsx ./proxy.ts
+        env:
+          VERSION: beta
 
       - name: Upload proxy.json
         uses: softprops/action-gh-release@v1
