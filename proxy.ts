@@ -28,19 +28,33 @@ async function getUpdater() {
   return updater;
 }
 
-function generateProxy(updater: Updater, proxy: string) {
+const proxies = {
+  "prefix": ["ghfast.top", "ghproxy.cn"],
+  "replace": ["gh.nn.ci"]
+} as const;
+
+type ProxyType = keyof typeof proxies;
+
+function generateProxy(updater: Updater, proxy: string, type: ProxyType) {
   const { platforms } = updater;
   for (const plat in platforms) {
     const raw_url = platforms[plat].url;
-    platforms[plat].url = `https://${proxy}/` + raw_url;
+    if (type === "prefix") {
+      platforms[plat].url = `https://${proxy}/` + raw_url;
+    } else {
+      platforms[plat].url = raw_url.replace("github.com", proxy);
+    }
   }
   fs.writeFileSync(`${proxy}.proxy.json`, JSON.stringify(updater, null, 2));
 }
 
 async function generateProxies() {
   const updater = await getUpdater();
-  generateProxy(updater, "ghfast.top");
-  generateProxy(updater, "ghproxy.cn");
+  for (const key in proxies) {
+    for (const proxy of proxies[key]) {
+      generateProxy(structuredClone(updater), proxy, key as ProxyType);
+    }
+  }
 }
 
 generateProxies();
