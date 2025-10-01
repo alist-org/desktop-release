@@ -130,7 +130,7 @@ jobs:
         env:
           AD_VERSION: ${{ github.ref_name }}
           TARGET_TRIPLE: ${{ matrix.target }}
-          BETA_VERSION: ${{ needs.gen_beta_version.outputs.beta_version }}
+          BETA_VERSION: ${{ needs.gen_beta_version.outputs.BETA_VERSION }}
 
       - name: Get Rclone version
         id: get-rclone-version
