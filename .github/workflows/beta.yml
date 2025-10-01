@@ -32,9 +32,35 @@ jobs:
           owner: alist-org
           keyword: beta
           deletetype: "release" #tag: will delete tags only; release: will delete releases only; tr: will delete both releases and tags
+      
+  gen_beta_version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          repository: alist-dev/desktop
+          token: ${{ secrets.MY_TOKEN }}
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 9
+          run_install: false
+  
+      - name: Sync node version and setup cache
+        uses: actions/setup-node@v3
+        with:
+          node-version: "lts/*"
+          cache: "pnpm" # Set this to npm, yarn or pnpm.
+
+      - name: Generate beta version
+        run: |
+          npx tsx ./scripts/gen_beta_version.ts
 
   release_beta:
-    needs: delete_old_beta
+    needs:
+      - delete_old_beta
+      - gen_beta_version
     strategy:
       fail-fast: false
       matrix:
@@ -104,6 +130,7 @@ jobs:
         env:
           AD_VERSION: ${{ github.ref_name }}
           TARGET_TRIPLE: ${{ matrix.target }}
+          BETA_VERSION: ${{ needs.gen_beta_version.outputs.beta_version }}
 
       - name: Get Rclone version
         id: get-rclone-version
